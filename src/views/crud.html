@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CRUD Operations</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .form-container {
+            margin-bottom: 20px;
+        }
+        .form-container input {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>CRUD Operations</h1>
+
+<!-- 添加新歌曲的表單 -->
+<div class="form-container">
+    <h2>Add New Song</h2>
+    <form id="createForm">
+        <input type="text" name="song_name" placeholder="Song Name" required>
+        <input type="text" name="work_name" placeholder="Work Name">
+        <input type="text" name="season_or_other" placeholder="Season or Other">
+        <input type="number" name="broadcast_year" placeholder="Broadcast Year">
+        <input type="number" name="broadcast_month" placeholder="Broadcast Month">
+        <input type="text" name="singer_or_group" placeholder="Singer or Group">
+        <input type="text" name="song_url" placeholder="Song URL">
+        <button type="submit">Add Song</button>
+    </form>
+</div>
+
+<!-- 顯示所有歌曲 -->
+<h2>All Songs</h2>
+<table>
+    <thead>
+        <tr>
+            <th>歌曲名稱</th>
+            <th>作品名稱</th>
+            <th>季度或其他</th>
+            <th>播出年份</th>
+            <th>播出月份</th>
+            <th>歌手或者表演團體</th>
+            <th>音樂網址</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="songList">
+        <!-- 歌曲數據將通過 JavaScript 動態填充 -->
+    </tbody>
+</table>
+
+<!-- 編輯表單（隱藏） -->
+<div id="editFormContainer" style="display: none;">
+    <h2>Edit Song</h2>
+    <form id="editForm">
+        <input type="text" name="song_name" placeholder="Song Name" required>
+        <input type="text" name="work_name" placeholder="Work Name">
+        <input type="text" name="season_or_other" placeholder="Season or Other">
+        <input type="number" name="broadcast_year" placeholder="Broadcast Year">
+        <input type="number" name="broadcast_month" placeholder="Broadcast Month">
+        <input type="text" name="singer_or_group" placeholder="Singer or Group">
+        <input type="text" name="song_url" placeholder="Song URL">
+        <button type="submit">Save Changes</button>
+        <button type="button" onclick="closeEditForm()">Cancel</button>
+    </form>
+</div>
+
+<script>
+    // 獲取所有歌曲並顯示
+    async function fetchSongs() {
+        const response = await fetch('/api/music');
+        const songs = await response.json();
+        const songList = document.getElementById('songList');
+        songList.innerHTML = songs.map(song => `
+            <tr>
+                <td>${song.song_name}</td>
+                <td>${song.work_name}</td>
+                <td>${song.season_or_other}</td>
+                <td>${song.broadcast_year}</td>
+                <td>${song.broadcast_month}</td>
+                <td>${song.singer_or_group}</td>
+                <td><a href="${song.song_url}" target="_blank">Listen</a></td>
+                <td>
+                    <button onclick="openEditForm('${song.song_name}')">Edit</button>
+                    <button onclick="deleteSong('${song.song_name}')">Delete</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // 添加新歌曲
+    document.getElementById('createForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+        await fetch('/api/music', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        fetchSongs(); // 刷新歌曲列表
+        e.target.reset(); // 清空表單
+    });
+
+    // 刪除歌曲
+    async function deleteSong(songName) {
+        await fetch(`/api/music/${songName}`, { method: 'DELETE' });
+        fetchSongs(); // 刷新歌曲列表
+    }
+
+    // 打開編輯表單
+    async function openEditForm(songName) {
+        const response = await fetch(`/api/music/${songName}`);
+        const song = await response.json();
+
+        // 填充編輯表單
+        const editForm = document.getElementById('editForm');
+        editForm.song_name.value = song.song_name;
+        editForm.work_name.value = song.work_name;
+        editForm.season_or_other.value = song.season_or_other;
+        editForm.broadcast_year.value = song.broadcast_year;
+        editForm.broadcast_month.value = song.broadcast_month;
+        editForm.singer_or_group.value = song.singer_or_group;
+        editForm.song_url.value = song.song_url;
+
+        // 顯示編輯表單
+        document.getElementById('editFormContainer').style.display = 'block';
+    }
+
+    // 關閉編輯表單
+    function closeEditForm() {
+        document.getElementById('editFormContainer').style.display = 'none';
+    }
+
+    // 提交編輯表單
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+        await fetch(`/api/music/${data.song_name}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        fetchSongs(); // 刷新歌曲列表
+        closeEditForm(); // 關閉編輯表單
+    });
+
+    // 初始加載歌曲列表
+    fetchSongs();
+</script>
+
+</body>
+</html>

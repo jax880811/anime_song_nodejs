@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Music</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Search Music</h1>
+
+<!-- 搜索表單 -->
+<form method="GET" action="/search">
+    <input type="text" name="q" value="<%= query %>" placeholder="Search for a song">
+    <button type="submit">Search</button>
+</form>
+
+<!-- 顯示搜尋結果 -->
+<h2>Search Results</h2>
+<% if (results.length > 0) { %>
+    <ul>
+    <% results.forEach(song => { %>
+        <li><%= song.歌曲名稱 %> - <a href="<%= song.音樂網址 %>" target="_blank">Listen</a></li>
+    <% }) %>
+    </ul>
+<% } else { %>
+    <p>No matching songs found.</p>
+<% } %>
+
+<!-- 顯示所有歌曲 -->
+<h2>All Songs in Database</h2>
+<% if (allSongs.length > 0) { %>
+    <table>
+        <thead>
+            <tr>
+                <th>歌曲名稱</th>
+                <th>作品名稱</th>
+                <th>季度或其他</th>
+                <th>播出年份</th>
+                <th>播出月份</th>
+                <th>歌手或者表演團體</th>
+                <th>音樂網址</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% allSongs.forEach(song => { %>
+                <tr>
+                    <td><%= song.歌曲名稱 %></td>
+                    <td><%= song.作品名稱 %></td>
+                    <td><%= song.季度或其他 %></td>
+                    <td><%= song.播出年份 %></td>
+                    <td><%= song.播出月份 %></td>
+                    <td><%= song.歌手或者表演團體 %></td>
+                    <td><a href="<%= song.音樂網址 %>" target="_blank">Listen</a></td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+<% } else { %>
+    <p>No songs available.</p>
+<% } %>
+
+</body>
+</html>
