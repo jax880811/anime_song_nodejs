@@ -3,8 +3,17 @@ const path = require('path'); // 引入 Node.js 的 path 模塊，用於處理�
 const config = require('./config/config'); // 引入配置文件，包含應用程序的配置信息（如端口號）
 const sequelize = require('./config/database'); // 引入 Sequelize 實例，用於連接 MySQL 數據庫
 const routes = require('./routes'); // 引入路由文件，定義所有 API 和頁面路由
+const session = require('express-session');
 
 const app = express(); // 創建 Express 應用程序實例
+
+sequelize.authenticate()
+  .then(() => {
+    console.log('Connected to MySQL');
+    return sequelize.sync({ force: false }); // 自動創建表（force: false 保留現有數據）
+  })
+  .then(() => console.log('Database synced'))
+  .catch(err => console.error('Database error:', err));
 
 // 設置模板引擎
 app.set('view engine', 'ejs'); // 設置視圖引擎為 EJS，用於渲染 HTML 頁面
@@ -15,6 +24,16 @@ sequelize.authenticate()
     .then(() => console.log('Connected to MySQL')) // 如果連接成功，輸出連接成功信息
     .catch(err => console.error('Could not connect to MySQL', err)); // 如果連接失敗，輸出錯誤信息
 
+// 配置 Session
+app.use(session({
+    secret: 'reweave880811', // 使用環境變量或隨機字符串
+    resave: false,
+    saveUninitialized: false,
+    cookie: { 
+      secure: process.env.NODE_ENV === 'production', // 生產環境需啟用 HTTPS
+      maxAge: 24 * 60 * 60 * 1000 // 1天
+    }
+  }));
 // 中間件
 app.use(express.json()); // 解析請求體中的 JSON 數據
 app.use(express.urlencoded({ extended: true })); // 解析請求體中的 URL 編碼數據
