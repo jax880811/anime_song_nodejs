@@ -3,6 +3,31 @@ const router = express.Router(); // 創建一個 Express 路由實例，用於�
 const searchController = require('../controllers/searchController'); // 引入搜索控制器，處理搜索相關的邏輯
 const animeSongController = require('../controllers/animeSongController'); // 引入動漫歌曲控制器，處理 CRUD 相關的邏輯
 const path = require('path'); // 引入 Node.js 的 path 模塊，用於處理文件路徑
+const authController = require('../controllers/authController');
+const registerController = require('../controllers/registerController');
+
+
+// 登入相關路由
+router.get('/login', authController.getLogin);
+router.post('/login', authController.postLogin);
+router.get('/logout', authController.logout);
+
+// 註冊相關路由
+router.get('/register', registerController.getRegister);
+router.post('/register', registerController.postRegister);
+
+// 保護 CRUD 路由的中间件
+function checkAuth(req, res, next) {
+  if (!req.session.user) {
+    return res.redirect('/login');
+  }
+  next();
+}
+
+// 受保護的 CRUD 路由
+router.get('/crud', checkAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/crud.html'));
+});
 
 // 搜索音樂 (HTML)
 router.get('/search', searchController.searchMusic); // 定義 GET 路由，用於處理搜索音樂的 HTML 頁面請求

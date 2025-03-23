@@ -1,3 +1,4 @@
+
 module.exports = {
     port: process.env.PORT || 3000, // 設置應用程序的端口號，優先使用環境變量 `PORT`，否則默認為 3000
     db: {
@@ -9,6 +10,18 @@ module.exports = {
     }
 };
 
+/*
+module.exports = {
+    port: process.env.PORT || 3000, // 設置應用程序的端口號，優先使用環境變量 `PORT`，否則默認為 3000
+    db: {
+        host: process.env.DB_HOST || 'affectionate_bhaskara', // 設置數據庫的主機地址，優先使用環境變量 `DB_HOST`，否則默認為 'localhost'
+        port: process.env.DB_PORT || 3306, // 設置數據庫的端口號，優先使用環境變量 `DB_PORT`，否則默認為 3306
+        database: process.env.DB_DATABASE || 'anime_song', // 設置數據庫名稱，優先使用環境變量 `DB_DATABASE`，否則默認為 'anime_song'
+        username: process.env.DB_USERNAME || 'root', // 設置數據庫用戶名，優先使用環境變量 `DB_USERNAME`，否則默認為 'root'
+        password: process.env.DB_PASSWORD || '1qaz@WSX3edc' // 設置數據庫密碼，優先使用環境變量 `DB_PASSWORD`，否則默認為 '1qaz@WSX3edc'
+    }
+};
+*/
 /*
  * config.js 筆記
  *
