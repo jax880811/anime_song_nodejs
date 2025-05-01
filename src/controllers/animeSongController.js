@@ -14,6 +14,7 @@ exports.getAnimeSongs = async (req, res) => {
 exports.createAnimeSong = async (req, res) => {
     try {
         const song = await AnimeSong.create(req.body); // 使用 Sequelize 的 create 方法，將請求體中的數據插入到數據庫中
+        console.log(req.body);
         res.status(201).json(song); // 返回 201 狀態碼（表示創建成功）並附上新創建的歌曲數據
     } catch (err) {
         res.status(400).json({ message: err.message }); // 如果發生錯誤，返回 400 狀態碼並附上錯誤訊息
@@ -25,6 +26,7 @@ exports.getAnimeSongByName = async (req, res) => {
     try {
         const song = await AnimeSong.findByPk(req.params.song_name); // 使用 Sequelize 的 findByPk 方法，根據歌曲名稱（主鍵）查找單個歌曲
         if (!song) return res.status(404).json({ message: 'Song not found' }); // 如果找不到歌曲，返回 404 狀態碼並附上錯誤訊息
+        console.log(req.params.song_name);
         res.json(song); // 返回找到的歌曲數據
     } catch (err) {
         res.status(500).json({ message: err.message }); // 如果發生錯誤，返回 500 狀態碼並附上錯誤訊息
@@ -39,6 +41,7 @@ exports.updateAnimeSong = async (req, res) => {
         });
         if (!updated) return res.status(404).json({ message: 'Song not found' }); // 如果找不到歌曲，返回 404 狀態碼並附上錯誤訊息
         const updatedSong = await AnimeSong.findByPk(req.params.song_name); // 再次查找更新後的歌曲數據
+        console.log(req.body);
         res.json(updatedSong); // 返回更新後的歌曲數據
     } catch (err) {
         res.status(400).json({ message: err.message }); // 如果發生錯誤，返回 400 狀態碼並附上錯誤訊息
