@@ -6,6 +6,7 @@ exports.getAnimeSongs = async (req, res) => {
         const songs = await AnimeSong.findAll(); // 使用 Sequelize 的 findAll 方法，從數據庫中獲取所有動漫歌曲
         res.json(songs); // 將獲取的歌曲數據以 JSON 格式返回給客戶端
     } catch (err) {
+
         res.status(500).json({ message: err.message }); // 如果發生錯誤，返回 500 狀態碼並附上錯誤訊息
     }
 };
@@ -17,6 +18,7 @@ exports.createAnimeSong = async (req, res) => {
         console.log(req.body);
         res.status(201).json(song); // 返回 201 狀態碼（表示創建成功）並附上新創建的歌曲數據
     } catch (err) {
+        console.error("錯誤訊息:" , err.message);
         res.status(400).json({ message: err.message }); // 如果發生錯誤，返回 400 狀態碼並附上錯誤訊息
     }
 };
@@ -26,9 +28,10 @@ exports.getAnimeSongByName = async (req, res) => {
     try {
         const song = await AnimeSong.findByPk(req.params.song_name); // 使用 Sequelize 的 findByPk 方法，根據歌曲名稱（主鍵）查找單個歌曲
         if (!song) return res.status(404).json({ message: 'Song not found' }); // 如果找不到歌曲，返回 404 狀態碼並附上錯誤訊息
-        console.log(req.params.song_name);
+        console.log(req.body);
         res.json(song); // 返回找到的歌曲數據
     } catch (err) {
+        console.error("錯誤訊息:" , err.message);
         res.status(500).json({ message: err.message }); // 如果發生錯誤，返回 500 狀態碼並附上錯誤訊息
     }
 };
@@ -44,6 +47,7 @@ exports.updateAnimeSong = async (req, res) => {
         console.log(req.body);
         res.json(updatedSong); // 返回更新後的歌曲數據
     } catch (err) {
+        console.error("錯誤訊息: " , err.message);
         res.status(400).json({ message: err.message }); // 如果發生錯誤，返回 400 狀態碼並附上錯誤訊息
     }
 };
@@ -55,8 +59,10 @@ exports.deleteAnimeSong = async (req, res) => {
             where: { song_name: req.params.song_name } // 使用 Sequelize 的 destroy 方法，根據歌曲名稱刪除對應的歌曲數據
         });
         if (!deleted) return res.status(404).json({ message: 'Song not found' }); // 如果找不到歌曲，返回 404 狀態碼並附上錯誤訊息
+        console.log(req.body);
         res.json({ message: 'Song deleted' }); // 返回刪除成功的訊息
     } catch (err) {
+        console.error("錯誤訊息: " , err.message);
         res.status(500).json({ message: err.message }); // 如果發生錯誤，返回 500 狀態碼並附上錯誤訊息
     }
 };
