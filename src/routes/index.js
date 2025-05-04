@@ -5,6 +5,7 @@ const animeSongController = require('../controllers/animeSongController'); // �
 const path = require('path'); // 引入 Node.js 的 path 模塊，用於處理文件路徑
 const authController = require('../controllers/authController');
 const registerController = require('../controllers/registerController');
+const checkJWTAuth = require('../middleware/authenticateJWT');
 
 
 // 登入相關路由
@@ -16,7 +17,7 @@ router.get('/logout', authController.logout);
 router.get('/register', registerController.getRegister);
 router.post('/register', registerController.postRegister);
 
-// 保護 CRUD 路由的中间件
+// 保護 CRUD 路由
 function checkAuth(req, res, next) {
   if (!req.session.user) {
     return res.redirect('/login');
@@ -24,16 +25,21 @@ function checkAuth(req, res, next) {
   next();
 }
 
+/*
 // 受保護的 CRUD 路由
 router.get('/crud', checkAuth, (req, res) => {
   res.sendFile(path.join(__dirname, '../views/crud.html'));
 });
+*/
+
 
 // 搜索音樂 (HTML)
 router.get('/search', searchController.searchMusic); // 定義 GET 路由，用於處理搜索音樂的 HTML 頁面請求
 
 // 搜索音樂 (API)
-router.get('/api/search', searchController.searchMusicAPI); // 定義 GET 路由，用於處理搜索音樂的 API 請求
+router.get('/api/search', searchController.searchMusicAPI,(req, res) => {
+  res.sendFile(path.join(__dirname, '../views/search_music.ejs'));
+}); // 定義 GET 路由，用於處理搜索音樂的 API 請求
 
 // 動漫歌曲 CRUD 操作
 router.get('/api/music', animeSongController.getAnimeSongs); // 定義 GET 路由，用於獲取所有動漫歌曲
@@ -42,10 +48,17 @@ router.get('/api/music/:song_name', animeSongController.getAnimeSongByName); // 
 router.put('/api/music/:song_name', animeSongController.updateAnimeSong); // 定義 PUT 路由，用於更新動漫歌曲
 router.delete('/api/music/:song_name', animeSongController.deleteAnimeSong); // 定義 DELETE 路由，用於刪除動漫歌曲
 
-// 提供 CRUD 操作的 HTML 頁面
-router.get('/crud', (req, res) => {
-    res.sendFile(path.join(__dirname, '../views/crud.html')); // 發送 CRUD 操作的 HTML 頁面
+router.get('/crud', checkJWTAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/crud.html')); // 使用解碼後的 JWT payload
 });
+
+
+/*
+// 受保護的 CRUD 路由
+router.get('/crud', checkAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, '../views/crud.html'));
+});
+*/
 
 module.exports = router; // 導出路由實例，供其他模塊使用
 
