@@ -22,15 +22,15 @@ exports.postLogin = async (req, res) => {
     // 簽發 JWT（建議使用 .env 存 secret）
     const token = jwt.sign(
       { id: user.id, username: user.username },
-      process.env.JWT_SECRET || 'super-secret-key',
-      { expiresIn: '1h' }
+      process.env.JWT_SECRET || 'reweave880811',
+      { expiresIn: '1d' }
     );
 
     // 將 token 設定為 HttpOnly cookie 或傳回前端
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 3600000 // 1 hour
+      maxAge: 24 * 60 *60 *1000 // 1天
     });
 
     res.redirect('/crud');
