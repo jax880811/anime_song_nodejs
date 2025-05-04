@@ -4,9 +4,24 @@ const config = require('./config/config'); // 引入配置文件，包含應用�
 const sequelize = require('./config/database'); // 引入 Sequelize 實例，用於連接 MySQL 數據庫
 const routes = require('./routes'); // 引入路由文件，定義所有 API 和頁面路由
 const session = require('express-session');
-
+const SequelizeStore = require('connect-session-sequelize')(session.Store);
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 const app = express(); // 創建 Express 應用程序實例
 
+
+// 數據庫連接與同步
+sequelize.authenticate()
+  .then(() => {
+    console.log('Connected to MySQL');
+    return sequelize.sync({ force: false });
+  })
+  .then(() => {
+    console.log('Database synced');
+    sessionStore.sync();  // 同步會話表
+  })
+  .catch(err => console.error('Database error:', err));
+/*
 sequelize.authenticate()
   .then(() => {
     console.log('Connected to MySQL');
@@ -14,6 +29,7 @@ sequelize.authenticate()
   })
   .then(() => console.log('Database synced'))
   .catch(err => console.error('Database error:', err));
+*/
 
 // 設置模板引擎
 app.set('view engine', 'ejs'); // 設置視圖引擎為 EJS，用於渲染 HTML 頁面
@@ -24,6 +40,45 @@ sequelize.authenticate()
     .then(() => console.log('Connected to MySQL')) // 如果連接成功，輸出連接成功信息
     .catch(err => console.error('Could not connect to MySQL', err)); // 如果連接失敗，輸出錯誤信息
 
+// 創建 Sequelize 存儲實例
+const sessionStore = new SequelizeStore({
+  db: sequelize,  // 使用已有的 Sequelize 實例
+  tableName: 'sessions'  // 自定義會話表名
+});
+
+
+// JWT 驗證中介
+function authenticateJWT(req, res, next) {
+  const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
+
+  if (!token) return res.status(403).send('Token missing');
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'reweave880811');
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(403).send('Invalid token');
+  }
+}
+
+
+/*
+// 配置 Session
+app.use(session({
+  secret: 'reweave880811',  // 生產環境應使用環境變量
+  store: sessionStore,  // 使用數據庫存儲會話
+  resave: false,
+  saveUninitialized: false,
+  cookie: { 
+    secure: false,  // 開發環境設為 false（若用 HTTPS 則設為 true）
+    maxAge: 24 * 60 * 60 * 1000
+  }
+}));
+*/
+
+
+/*
 // 配置 Session
 app.use(session({
     secret: 'reweave880811', // 使用環境變量或隨機字符串
@@ -34,9 +89,14 @@ app.use(session({
       maxAge: 24 * 60 * 60 * 1000 // 1天
     }
   }));
+
+*/
 // 中間件
+
+app.use(cookieParser());
 app.use(express.json()); // 解析請求體中的 JSON 數據
 app.use(express.urlencoded({ extended: true })); // 解析請求體中的 URL 編碼數據
+
 
 // 路由
 app.use('/', routes); // 使用定義的路由處理所有請求
