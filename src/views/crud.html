@@ -26,13 +26,21 @@
 </head>
 <body>
     <div style="text-align: right; padding: 10px;">
-        <% if (user) { %>
-          歡迎，<%= user.username %>！<a href="/logout">登出</a>
-        <% } else { %>
-          <a href="/login">登入</a> | <a href="/register">註冊</a>
-        <% } %>
+        <a href="/logout">登出</a>
+        
+        <a href="/login">登入</a> | <a href="/register">註冊</a>
+        
+      </div>
+      <div id="nowPlaying">
+        <h3>🎧 Now Playing: <span id="playingTitle">載入中...</span></h3>
+        <iframe id="songPlayer" width="560" height="315" frameborder="0" allow="autoplay" allowfullscreen></iframe>
+        <div style="margin-top: 10px;">
+          <button onclick="prevSong()">⏮️ 上一首</button>
+          <button onclick="nextSong()">⏭️ 下一首</button>
+        </div>
       </div>
 <h1>CRUD Operations</h1>
+
 
 <!-- 添加新歌曲的表單 -->
 <div class="form-container">
@@ -168,6 +176,98 @@
 
     // 初始加載歌曲列表
     fetchSongs();
+    // 播放隨機歌曲
+async function playRandomSong() {
+    const res = await fetch('/api/music/random');
+    const song = await res.json();
+
+    if (song && song.song_url) {
+        // 播放區更新
+        document.getElementById('playingTitle').textContent = song.song_name;
+
+        // 處理 YouTube 連結（轉成嵌入格式）
+        let embedURL = song.song_url;
+        if (embedURL.includes('youtube.com/watch?v=')) {
+            const videoId = embedURL.split('v=')[1].split('&')[0];
+            embedURL = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+        }
+
+        document.getElementById('songPlayer').src = embedURL;
+    }
+}
+let playlist = [];
+let currentIndex = 0;
+
+// 載入所有歌曲並初始化播放
+async function initPlaylist() {
+    const res = await fetch('/api/music');
+    playlist = await res.json();
+
+    if (playlist.length > 0) {
+        currentIndex = Math.floor(Math.random() * playlist.length); // 隨機選首歌
+        playCurrentSong();
+    }
+}
+
+// 播放當前歌曲
+function playCurrentSong() {
+    const song = playlist[currentIndex];
+    document.getElementById('playingTitle').textContent = song.song_name;
+
+    let embedURL = song.song_url;
+
+    if (embedURL.includes('youtube.com/watch?v=')) {
+        const videoId = embedURL.split('v=')[1].split('&')[0];
+        embedURL = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1`;
+    }
+
+    const iframe = document.getElementById('songPlayer');
+    iframe.src = embedURL;
+
+    // 若是 YouTube 嵌入，重新設定播放器 API
+    setTimeout(bindYouTubeEndEvent, 1000);
+}
+
+// 切換下一首
+function nextSong() {
+    currentIndex = (currentIndex + 1) % playlist.length;
+    playCurrentSong();
+}
+
+// 切換上一首
+function prevSong() {
+    currentIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+    playCurrentSong();
+}
+
+// 綁定 YouTube 播放結束事件（需 YouTube IFrame API）
+function bindYouTubeEndEvent() {
+    if (!window.YT || !YT.Player) return;
+
+    new YT.Player('songPlayer', {
+        events: {
+            'onStateChange': (event) => {
+                if (event.data === YT.PlayerState.ENDED) {
+                    nextSong(); // 播完自動切下一首
+                }
+            }
+        }
+    });
+}
+
+// 載入 YouTube IFrame API
+function loadYouTubeAPI() {
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+}
+// 初始載入播放
+playRandomSong();
+// 啟動整個播放系統
+loadYouTubeAPI();
+initPlaylist();
+
 </script>
 
 </body>

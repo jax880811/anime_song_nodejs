@@ -43,7 +43,7 @@ exports.postLogin = async (req, res) => {
 exports.logout = (req, res) => {
   // 清除 token cookie
   res.clearCookie('token');
-  res.redirect('/');
+  res.redirect('/login');
 };
 /*
 const User = require('../models/User');

@@ -69,6 +69,19 @@ exports.deleteAnimeSong = async (req, res) => {
     }
 };
 
+// 隨機撈一首歌
+exports.getRandomSong = async (req, res) => {
+    try {
+      const count = await AnimeSong.count();
+      const randomIndex = Math.floor(Math.random() * count);
+      const song = await AnimeSong.findOne({ offset: randomIndex });
+      
+      res.json(song);
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  };
+
 /*
  * animeSongController.js 筆記
  *

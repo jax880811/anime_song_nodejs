@@ -32,14 +32,12 @@ router.get('/crud', checkAuth, (req, res) => {
 });
 */
 
-
+router.get('/api/music/random', animeSongController.getRandomSong);
 // 搜索音樂 (HTML)
-router.get('/search', searchController.searchMusic); // 定義 GET 路由，用於處理搜索音樂的 HTML 頁面請求
+router.get('/search', searchController.searchMusic ); // 定義 GET 路由，用於處理搜索音樂的 HTML 頁面請求
 
 // 搜索音樂 (API)
-router.get('/api/search', searchController.searchMusicAPI,(req, res) => {
-  res.sendFile(path.join(__dirname, '../views/search_music.ejs'));
-}); // 定義 GET 路由，用於處理搜索音樂的 API 請求
+router.get('/api/search', searchController.searchMusicAPI); // 定義 GET 路由，用於處理搜索音樂的 API 請求
 
 // 動漫歌曲 CRUD 操作
 router.get('/api/music', animeSongController.getAnimeSongs); // 定義 GET 路由，用於獲取所有動漫歌曲
@@ -47,6 +45,9 @@ router.post('/api/music', animeSongController.createAnimeSong); // 定義 POST �
 router.get('/api/music/:song_name', animeSongController.getAnimeSongByName); // 定義 GET 路由，用於根據歌曲名稱獲取單個動漫歌曲
 router.put('/api/music/:song_name', animeSongController.updateAnimeSong); // 定義 PUT 路由，用於更新動漫歌曲
 router.delete('/api/music/:song_name', animeSongController.deleteAnimeSong); // 定義 DELETE 路由，用於刪除動漫歌曲
+
+
+
 
 router.get('/crud', checkJWTAuth, (req, res) => {
   res.sendFile(path.join(__dirname, '../views/crud.html')); // 使用解碼後的 JWT payload
