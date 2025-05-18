@@ -1,5 +1,69 @@
 const AnimeSong = require('../models/AnimeSong'); // 引入 AnimeSong 模型，用於操作數據庫中的動漫歌曲數據
+const { Op } = require('sequelize');
 
+/*
+// Cursor-based 分頁實作
+exports.getAnimeSongs = async (req, res) => {
+  try {
+    const limit = 10;
+    const lastSongName = req.query.lastSongName || null;
+
+    let where = {};
+    if (lastSongName) {
+      where.song_name = { [Op.gt]: lastSongName }; // 只撈比上一筆大的（ASC）
+    }
+
+    const songs = await AnimeSong.findAll({
+      where,
+      limit,
+      order: [['song_name', 'ASC']],
+    });
+
+    const total = await AnimeSong.count();
+
+    res.json({
+      songs,
+      totalItems: total,
+      hasNext: songs.length === limit,
+      lastSongName: songs.length > 0 ? songs[songs.length - 1].song_name : null
+    });
+  } catch (err) {
+    console.error('[getAnimeSongs] Error:', err.message);
+    res.status(500).json({ message: '伺服器錯誤：' + err.message });
+  }
+};
+*/
+
+exports.getAnimeSongs = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;    // ⏱️ 第幾頁（預設第1頁）
+    const limit = 10;                              // ⏱️ 每頁筆數限制
+    const offset = (page - 1) * limit;             // ⏱️ 計算 OFFSET 起始位置
+
+    // 🚀 資料查詢，LIMIT + OFFSET 搭配索引加速
+    const songs = await AnimeSong.findAll({
+      limit,
+      offset,
+      order: [['song_name', 'ASC']]               // 🔡 排序字段（若 song_name 有索引效果更好）
+    });
+
+    // 🧠 快速查詢總數（可用快取或維護總數欄位）
+    const countResult = await AnimeSong.count();  // ⚠️ 可替換成 Redis/MEMO 快取
+
+    // 📤 回傳格式化分頁結果
+    res.json({
+      songs,                                       // 🎵 本頁歌曲資料
+      totalPages: Math.ceil(countResult / limit), // 📄 總頁數
+      currentPage: page                           // 📍當前頁數
+    });
+  } catch (err) {
+    console.error('[getAnimeSongs] 錯誤：', err.message);
+    res.status(500).json({ message: '伺服器錯誤：' + err.message });
+  }
+};
+
+
+/*
 // 獲取所有動漫歌曲
 exports.getAnimeSongs = async (req, res) => {
     try {
@@ -10,7 +74,7 @@ exports.getAnimeSongs = async (req, res) => {
         res.status(500).json({ message: err.message }); // 如果發生錯誤，返回 500 狀態碼並附上錯誤訊息
     }
 };
-
+*/
 // 創建新的動漫歌曲
 exports.createAnimeSong = async (req, res) => {
     try {

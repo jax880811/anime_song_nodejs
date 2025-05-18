@@ -93,29 +93,110 @@
     </form>
 </div>
 
-<script>
-    // 獲取所有歌曲並顯示
-    async function fetchSongs() {
-        const response = await fetch('/api/music');
-        const songs = await response.json();
-        const songList = document.getElementById('songList');
-        songList.innerHTML = songs.map(song => `
-            <tr>
-                <td>${song.song_name}</td>
-                <td>${song.work_name}</td>
-                <td>${song.season_or_other}</td>
-                <td>${song.broadcast_year}</td>
-                <td>${song.broadcast_month}</td>
-                <td>${song.singer_or_group}</td>
-                <td><a href="${song.song_url}" target="_blank">Listen</a></td>
-                <td>
-                    <button onclick="openEditForm('${song.song_name}')">Edit</button>
-                    <button onclick="deleteSong('${song.song_name}')">Delete</button>
-                </td>
-            </tr>
-        `).join('');
-    }
 
+
+<script>
+/*
+    let cursorMap = { 1: null }; // 第 1 頁 cursor 為 null
+let currentPage = 1;
+let totalPages = 1;
+
+async function fetchSongsByPage(page) {
+  const cursor = cursorMap[page] || null;
+  const url = cursor ? `/api/music?lastSongName=${encodeURIComponent(cursor)}` : '/api/music';
+
+  const response = await fetch(url);
+  const data = await response.json();
+  const songs = data.songs;
+
+  currentPage = page;
+  totalPages = Math.ceil(data.totalItems / 10);
+
+  if (songs.length > 0 && !cursorMap[page + 1]) {
+    cursorMap[page + 1] = data.lastSongName;
+  }
+
+  const songList = document.getElementById('songList');
+  songList.innerHTML = songs.map(song => `
+    <tr>
+      <td>${song.song_name}</td>
+      <td>${song.work_name}</td>
+      <td>${song.season_or_other}</td>
+      <td>${song.broadcast_year}</td>
+      <td>${song.broadcast_month}</td>
+      <td>${song.singer_or_group}</td>
+      <td><a href="${song.song_url}" target="_blank">Listen</a></td>
+      <td>
+        <button onclick="openEditForm('${song.song_name}')">Edit</button>
+        <button onclick="deleteSong('${song.song_name}')">Delete</button>
+      </td>
+    </tr>
+  `).join('');
+
+  renderPaginationUI();
+}
+
+// 動態渲染頁碼按鈕
+function renderPaginationUI() {
+  const container = document.getElementById('pagination');
+  container.innerHTML = '';
+
+  for (let i = 1; i <= totalPages; i++) {
+    const btn = document.createElement('button');
+    btn.textContent = i;
+    btn.disabled = i === currentPage;
+    btn.onclick = () => fetchSongsByPage(i);
+    container.appendChild(btn);
+  }
+}
+
+// 初始載入
+fetchSongsByPage(1);
+*/
+
+function renderPagination(totalPages, currentPage) {
+  const paginationContainer = document.getElementById('pagination');
+  if (!paginationContainer) return;
+
+  paginationContainer.innerHTML = '';
+
+  for (let i = 1; i <= totalPages; i++) {
+    const btn = document.createElement('button');
+    btn.textContent = i;
+    btn.disabled = i === currentPage;
+    btn.onclick = () => fetchSongs(i);
+    paginationContainer.appendChild(btn);
+  }
+}
+
+
+ let currentPage = 1;
+
+async function fetchSongs(page = 1) {
+  const response = await fetch(`/api/music?page=${page}`);
+  const data = await response.json();
+  const songs = data.songs;
+  const songList = document.getElementById('songList');
+
+  songList.innerHTML = songs.map(song => `
+    <tr>
+        <td>${song.song_name}</td>
+        <td>${song.work_name}</td>
+        <td>${song.season_or_other}</td>
+        <td>${song.broadcast_year}</td>
+        <td>${song.broadcast_month}</td>
+        <td>${song.singer_or_group}</td>
+        <td><a href="${song.song_url}" target="_blank">Listen</a></td>
+        <td>
+            <button onclick="openEditForm('${song.song_name}')">Edit</button>
+            <button onclick="deleteSong('${song.song_name}')">Delete</button>
+        </td>
+    </tr>
+  `).join('');
+
+  renderPagination(data.totalPages, data.currentPage);
+}
+  
     // 添加新歌曲
     document.getElementById('createForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -177,7 +258,7 @@
     // 初始加載歌曲列表
     fetchSongs();
 
-    
+
     // 播放隨機歌曲
 async function playRandomSong() {
     const res = await fetch('/api/music/random');
@@ -197,13 +278,16 @@ async function playRandomSong() {
         document.getElementById('songPlayer').src = embedURL;
     }
 }
+
+
 let playlist = [];
 let currentIndex = 0;
 
 // 載入所有歌曲並初始化播放
 async function initPlaylist() {
-    const res = await fetch('/api/music');
-    playlist = await res.json();
+    const res = await fetch('/api/music'); // ← 回傳的是 { songs: [...], ... }
+    const data = await res.json(); // ✅ 先轉成 JSON 物件
+    playlist = data.songs || [];  // ✅ 正確取得歌曲陣列
 
     if (playlist.length > 0) {
         currentIndex = Math.floor(Math.random() * playlist.length); // 隨機選首歌
@@ -213,6 +297,12 @@ async function initPlaylist() {
 
 // 播放當前歌曲
 function playCurrentSong() {
+    if (!playlist || playlist.length === 0) {
+        document.getElementById('playingTitle').textContent = 'No songs available.';
+        document.getElementById('songPlayer').src = '';
+        return;
+    }
+
     const song = playlist[currentIndex];
     document.getElementById('playingTitle').textContent = song.song_name;
 
@@ -226,8 +316,7 @@ function playCurrentSong() {
     const iframe = document.getElementById('songPlayer');
     iframe.src = embedURL;
 
-    // 若是 YouTube 嵌入，重新設定播放器 API
-    setTimeout(bindYouTubeEndEvent, 1000);
+    setTimeout(bindYouTubeEndEvent, 1000); // 防止還沒載入 API 就綁定錯誤
 }
 
 // 切換下一首
@@ -271,6 +360,9 @@ loadYouTubeAPI();
 initPlaylist();
 
 </script>
+
+<!-- 分頁按鈕容器 -->
+<div id="pagination" style="margin-top: 20px; text-align: center;"></div>
 
 </body>
 </html>
